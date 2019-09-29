@@ -1,0 +1,389 @@
+---
+title: "Minnesota Economic Characteristics"
+author: "Leif and Cal"
+date: "12/10/2018"
+output: html_document
+runtime: shiny
+---
+
+```{r setup, include=FALSE, echo = FALSE}
+library(AER)
+library(rsconnect)
+library(carData)
+library(tidyverse)
+library(plotly)
+library(ggplot2)
+library(scales)
+library(shiny)
+library(readr)
+library(dplyr)
+library(relaimpo)
+library(broom)
+library(stringr)
+library(rvest)
+library(httr)
+library(mapdata)
+library(maps)
+econ_all <- read_csv("econ_all.csv")
+```
+
+## American Fact Finder Data - combination of data surrounding individual and family information about employment, income, and health insurance statuses
+
+## This data comes from the years 2012, 2013, 2014, 2015, and 2016.
+
+## Our goal is to display this data in a way that allows for those who have no prior knowledge about the data to understand what it is trying to say
+
+## Tidy Process - renaming variables, joining different years, filter, rename, and join map data.
+
+***
+
+#### These plots allow us to visualize the economic trends in Minnesota, like industry make-up, unemployment, and poverty by each county. By county allows us to see inequalities or specializations across our own state, which given more time, we could predict how different economic shocks could impact each of the individual counties. In addition to this, we could examine raises in median income in some counties, reverse-engineer it, and apply similar solutions to counties that are struggling.
+
+***
+
+```{r, include=FALSE, echo=FALSE, shiny1}
+minne = map_data("county") %>%
+  filter(region == 'minnesota')
+minne$County <- minne$subregion
+
+minne <- minne %>%
+  mutate(County = ifelse(County == "st louis", "st. louis", County)) %>%
+  mutate_at("County",.fun=tolower)
+econ_all<-econ_all %>%
+  mutate(County = tolower(County))
+econ_all$County
+MN <- minne %>%
+  left_join(econ_all, by = "County")
+```
+
+# Combined Plots for all years
+
+***
+
+```{r, shiny2, echo = FALSE}
+inputPanel(
+  selectInput("x", label = "Explanatory:",
+              choices = c(
+                "% in Labor Force" = "labor_force",
+                "% Employed" = "employed",
+                "% Unemployed" = "unemployed",
+                "Works Outside" = "outside",
+                "Construction" = "construction",
+                "Manufacturing" = "manuf",
+                "Wholesale" = "wholesale",
+                "Retail" = "retail",
+                "Transportation" = "transutil",
+                "Information" = "info",
+                "Finance" = "finance",
+                "Administrative" = "admin",
+                "Education" = "educsoc",
+                "Arts" = "arts",
+                "Other" = "other",
+                "Public" = "publicadmin",
+                "Income" = "medianincome",
+                "% Below Poverty Line" = "poverty"
+              ), selected = "labor_force", selectize = F, size = 2),
+  selectInput("y", label = "Response:",
+              choices = c(
+                "% Covered" = "covered",
+                "% Public Coverage" = "public",
+                "% Private Coverage" = "private",
+                "% Not Covered" = "notcovered"
+              ), selected = "covered", selectize = F, size = 2)
+)
+
+renderPlotly({
+  ggplot(data = MN, aes(x = long, y = lat, group = group)) +
+    geom_polygon(aes_string(fill = input$x, color = input$y)) +
+    facet_wrap(~year) +
+    scale_fill_gradient(low = "black", high = "white") +
+    scale_color_gradient(low = "darkgoldenrod", high = "cornsilk1")
+})
+```
+
+# Main Findings:
+
+#### Less coverage in north where income is lower and poverty is higher
+
+#### Northeast has higher relative amounts of private coverage
+
+#### Far less public coverage in metropolitan area until recently
+
+#### Most of Minnesota is covered except for mid-northern regions
+
+#### Only minor variances by industry
+
+# Plots by year
+
+```{r, shiny3, include = FALSE, echo = FALSE}
+MN2016 <- MN %>%
+  filter(year == 2016)
+
+MN2015 <- MN %>%
+  filter(year == 2015)
+
+MN2014 <- MN %>%
+  filter(year == 2014)
+
+MN2013 <- MN %>%
+  filter(year == 2013)
+
+MN2012 <- MN %>%
+  filter(year == 2012)
+```
+
+# 2012
+
+***
+
+```{r, shiny4, echo = FALSE}
+inputPanel(
+  selectInput("x1", label = "Explanatory:",
+              choices = c(
+                "% in Labor Force" = "labor_force",
+                "% Employed" = "employed",
+                "% Unemployed" = "unemployed",
+                "Works Outside" = "outside",
+                "Construction" = "construction",
+                "Manufacturing" = "manuf",
+                "Wholesale" = "wholesale",
+                "Retail" = "retail",
+                "Transportation" = "transutil",
+                "Information" = "info",
+                "Finance" = "finance",
+                "Administrative" = "admin",
+                "Education" = "educsoc",
+                "Arts" = "arts",
+                "Other" = "other",
+                "Public" = "publicadmin",
+                "Income" = "medianincome",
+                "% Below Poverty Line" = "poverty"
+              ), selected = "labor_force", selectize = F, size = 2),
+  selectInput("y1", label = "Response:",
+              choices = c(
+                "% Covered" = "covered",
+                "% Public Coverage" = "public",
+                "% Private Coverage" = "private",
+                "% Not Covered" = "notcovered"
+              ), selected = "covered", selectize = F, size = 2)
+)
+
+renderPlotly({
+  ggplot(data = MN2012, aes(x = long, y = lat, group = group)) +
+    geom_polygon(aes_string(fill = input$x1, color = input$y1)) +
+    scale_fill_gradient(low = "black", high = "white") +
+    scale_color_gradient(low = "darkgoldenrod", high = "cornsilk1")
+})
+```
+
+# 2013
+
+***
+
+```{r, shiny5, echo = FALSE}
+inputPanel(
+  selectInput("x2", label = "Explanatory:",
+              choices = c(
+                "% in Labor Force" = "labor_force",
+                "% Employed" = "employed",
+                "% Unemployed" = "unemployed",
+                "Works Outside" = "outside",
+                "Construction" = "construction",
+                "Manufacturing" = "manuf",
+                "Wholesale" = "wholesale",
+                "Retail" = "retail",
+                "Transportation" = "transutil",
+                "Information" = "info",
+                "Finance" = "finance",
+                "Administrative" = "admin",
+                "Education" = "educsoc",
+                "Arts" = "arts",
+                "Other" = "other",
+                "Public" = "publicadmin",
+                "Income" = "medianincome",
+                "% Below Poverty Line" = "poverty"
+              ), selected = "labor_force", selectize = F, size = 2),
+  selectInput("y2", label = "Response:",
+              choices = c(
+                "% Covered" = "covered",
+                "% Public Coverage" = "public",
+                "% Private Coverage" = "private",
+                "% Not Covered" = "notcovered"
+              ), selected = "covered", selectize = F, size = 2)
+)
+
+renderPlotly({
+  ggplot(data = MN2013, aes(x = long, y = lat, group = group)) +
+    geom_polygon(aes_string(fill = input$x2, color = input$y2)) +
+    scale_fill_gradient(low = "black", high = "white") +
+    scale_color_gradient(low = "darkgoldenrod", high = "cornsilk1")
+})
+```
+
+# 2014
+
+***
+
+```{r, shiny6, echo = FALSE}
+inputPanel(
+  selectInput("x3", label = "Explanatory:",
+              choices = c(
+                "% in Labor Force" = "labor_force",
+                "% Employed" = "employed",
+                "% Unemployed" = "unemployed",
+                "Works Outside" = "outside",
+                "Construction" = "construction",
+                "Manufacturing" = "manuf",
+                "Wholesale" = "wholesale",
+                "Retail" = "retail",
+                "Transportation" = "transutil",
+                "Information" = "info",
+                "Finance" = "finance",
+                "Administrative" = "admin",
+                "Education" = "educsoc",
+                "Arts" = "arts",
+                "Other" = "other",
+                "Public" = "publicadmin",
+                "Income" = "medianincome",
+                "% Below Poverty Line" = "poverty"
+              ), selected = "labor_force", selectize = F, size = 2),
+  selectInput("y3", label = "Response:",
+              choices = c(
+                "% Covered" = "covered",
+                "% Public Coverage" = "public",
+                "% Private Coverage" = "private",
+                "% Not Covered" = "notcovered"
+              ), selected = "covered", selectize = F, size = 2)
+)
+
+renderPlotly({
+  ggplot(data = MN2014, aes(x = long, y = lat, group = group)) +
+    geom_polygon(aes_string(fill = input$x3, color = input$y3)) +
+    scale_fill_gradient(low = "black", high = "white") +
+    scale_color_gradient(low = "darkgoldenrod", high = "cornsilk1")
+})
+```
+
+# 2015
+
+***
+
+```{r, shiny7, echo = FALSE}
+inputPanel(
+  selectInput("x4", label = "Explanatory:",
+              choices = c(
+                "% in Labor Force" = "labor_force",
+                "% Employed" = "employed",
+                "% Unemployed" = "unemployed",
+                "Works Outside" = "outside",
+                "Construction" = "construction",
+                "Manufacturing" = "manuf",
+                "Wholesale" = "wholesale",
+                "Retail" = "retail",
+                "Transportation" = "transutil",
+                "Information" = "info",
+                "Finance" = "finance",
+                "Administrative" = "admin",
+                "Education" = "educsoc",
+                "Arts" = "arts",
+                "Other" = "other",
+                "Public" = "publicadmin",
+                "Income" = "medianincome",
+                "% Below Poverty Line" = "poverty"
+              ), selected = "labor_force", selectize = F, size = 2),
+  selectInput("y4", label = "Response:",
+              choices = c(
+                "% Covered" = "covered",
+                "% Public Coverage" = "public",
+                "% Private Coverage" = "private",
+                "% Not Covered" = "notcovered"
+              ), selected = "covered", selectize = F, size = 2)
+)
+
+renderPlotly({
+  ggplot(data = MN2015, aes(x = long, y = lat, group = group)) +
+    geom_polygon(aes_string(fill = input$x4, color = input$y4)) +
+    scale_fill_gradient(low = "black", high = "white") +
+    scale_color_gradient(low = "darkgoldenrod", high = "cornsilk1")
+})
+```
+
+# 2016
+
+***
+
+```{r, shiny9, echo = FALSE, include = FALSE}
+inputPanel(
+  selectInput("x6", label = "Explanatory:",
+              choices = c(
+                "% in Labor Force" = "labor_force",
+                "% Employed" = "employed",
+                "% Unemployed" = "unemployed",
+                "Works Outside" = "outside",
+                "Construction" = "construction",
+                "Manufacturing" = "manuf",
+                "Wholesale" = "wholesale",
+                "Retail" = "retail",
+                "Transportation" = "transutil",
+                "Information" = "info",
+                "Finance" = "finance",
+                "Administrative" = "admin",
+                "Education" = "educsoc",
+                "Arts" = "arts",
+                "Other" = "other",
+                "Public" = "publicadmin",
+                "Income" = "medianincome",
+                "% Below Poverty Line" = "poverty"
+              ), selected = "labor_force", selectize = F, size = 2)
+)
+
+renderPlot({
+  ggplot(data = MN2016) + 
+    geom_point(mapping = aes(x = County, y = as.numeric(input$x6))) +
+    coord_flip() +
+    theme(axis.text.y = element_text(size = 5), axis.text.x = element_text(angle = 90)) +
+    labs(y = "Explanatory", x = "County")
+})
+```
+
+***
+
+```{r, shiny8, echo = FALSE}
+inputPanel(
+  selectInput("x5", label = "Explanatory:",
+              choices = c(
+                "% in Labor Force" = "labor_force",
+                "% Employed" = "employed",
+                "% Unemployed" = "unemployed",
+                "Works Outside" = "outside",
+                "Construction" = "construction",
+                "Manufacturing" = "manuf",
+                "Wholesale" = "wholesale",
+                "Retail" = "retail",
+                "Transportation" = "transutil",
+                "Information" = "info",
+                "Finance" = "finance",
+                "Administrative" = "admin",
+                "Education" = "educsoc",
+                "Arts" = "arts",
+                "Other" = "other",
+                "Public" = "publicadmin",
+                "Income" = "medianincome",
+                "% Below Poverty Line" = "poverty"
+              ), selected = "labor_force", selectize = F, size = 2),
+  selectInput("y5", label = "Response:",
+              choices = c(
+                "% Covered" = "covered",
+                "% Public Coverage" = "public",
+                "% Private Coverage" = "private",
+                "% Not Covered" = "notcovered"
+              ), selected = "covered", selectize = F, size = 2)
+)
+
+renderPlotly({
+  ggplot(data = MN2016, aes(x = long, y = lat, group = group)) +
+    geom_polygon(aes_string(fill = input$x5, color = input$y5)) +
+    scale_fill_gradient(low = "black", high = "white") +
+    scale_color_gradient(low = "darkgoldenrod", high = "cornsilk1")
+})
+```
