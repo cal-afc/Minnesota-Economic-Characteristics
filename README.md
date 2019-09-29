@@ -1,0 +1,2 @@
+# Minnesota-Economic-Characteristics
+American Fact Finder Data - combination of data surrounding individual and family information about employment, income, and health insurance statuses. This data comes from the years 2012, 2013, 2014, 2015, and 2016. Our goal is to display this data in a way that allows for those who have no prior knowledge about the data to understand what it is trying to say. Tidy Process - renaming variables, joining different years, filter, rename, and join map data.
